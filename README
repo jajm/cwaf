@@ -1,0 +1,6 @@
+Template of directory structure and Makefiles for C libraries
+
+Just put your C source files into src/ and your C header files into include/ and
+run make!
+
+Do not forget to remove the content of this file!
