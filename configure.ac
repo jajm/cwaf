@@ -12,6 +12,7 @@ AC_CONFIG_FILES([
 	src/Makefile
 	include/Makefile
 	t/Makefile
+	examples/Makefile
 	cwaf.pc
 	config.mk
 ])

@@ -1,8 +1,8 @@
 include ../config.mk
 
 CFLAGS := -Wall -Wextra -Werror -g -std=c99 $(CFLAGS)
-CPPFLAGS := -I../include $(CPPFLAGS)
-LDFLAGS := $(LDFLAGS)
+CPPFLAGS := -I../include $(shell pkg-config --cflags libobject) $(CPPFLAGS)
+LDFLAGS := -lfcgi $(shell pkg-config --libs libobject) $(LDFLAGS)
 LIBTOOL_CURRENT := @LIBTOOL_CURRENT@
 LIBTOOL_REVISION := @LIBTOOL_REVISION@
 LIBTOOL_AGE := @LIBTOOL_AGE@
