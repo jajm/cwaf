@@ -133,3 +133,60 @@ void cwaf_init(array_t *router)
 		}
 	}
 }
+
+hash_t * cwaf_parse_query_string(void)
+{
+	hash_t *params;
+	object_t *param;
+	char *query_string, *start, *end;
+	string_t *name, *value;
+	char c;
+	int done = 0;
+
+	params = hash();
+	query_string = getenv("QUERY_STRING");
+	start = query_string;
+	while (!done) {
+		name = NULL;
+		value = NULL;
+		end = strpbrk(start, "=&;");
+		if (end != NULL) {
+			c = *end;
+			*end = '\0';
+			name = string(start);
+			*end = c;
+
+			start = end + 1;
+
+			if (c == '=') {
+				end = strpbrk(start, "&;");
+				if (end != NULL) {
+					c = *end;
+					*end = '\0';
+					value = string(start);
+					*end = c;
+					start = end + 1;
+				} else {
+					value = string(start);
+					done = 1;
+				}
+			}
+		} else {
+			name = string(start);
+			done = 1;
+		}
+
+		param = hash_get(params, string_to_c_str(name));
+		if (object_is_array(param)) {
+			array_push(param, value);
+		} else if (object_is_string(param)) {
+			string_t *copy = string(string_to_c_str(param));
+			array_t *a = array(copy, value);
+			hash_set(params, string_to_c_str(name), a);
+		} else {
+			hash_set(params, string_to_c_str(name), value);
+		}
+	}
+
+	return params;
+}
