@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L // for strndup
 #include <stdlib.h>
 #include <string.h>
 #include <fcgi_stdio.h>
@@ -5,8 +6,10 @@
 #include <libobject/array.h>
 #include <libobject/hash.h>
 #include <libobject/string.h>
+#include <libobject/foreach.h>
 #include "cwaf_env.h"
 #include "cwaf_callback.h"
+#include "cwaf_params.h"
 #include "cwaf.h"
 
 static array_t * response_error(const char *status, const char *message)
@@ -66,7 +69,7 @@ void response_render(array_t *response)
 		cwaf_putc('\n');
 	}
 	cwaf_putc('\n');
-	array_foreach(body, s) {
+	foreach(body, s) {
 		cwaf_puts(string_to_c_str(s));
 	}
 	cwaf_putc('\n');
@@ -91,7 +94,7 @@ void cwaf_init(array_t *router)
 	while (FCGI_Accept() >= 0) {
 		cwaf_cb callback = NULL;
 		regex_t preg;
-		size_t nmatch = 9;
+		size_t nmatch = 10;
 		regmatch_t pmatch[10];
 		char *path_info;
 		char *server_protocol;
@@ -114,7 +117,7 @@ void cwaf_init(array_t *router)
 			return;
 		}
 
-		it = array_iterator_new(router);
+		it = object_iterator_new(router);
 		while (!iterator_step(it)) {
 			array_t *router_entry = iterator_get(it);
 			const char *method = string_to_c_str(array_get(router_entry, 0));
@@ -147,66 +150,14 @@ void cwaf_init(array_t *router)
 			response = callback(args);
 			response_render(response);
 			object_free(args);
+			object_free(response);
 		} else {
 			response = response_error_404("");
 			response_render(response);
+			object_free(response);
 		}
+
+		cwaf_params_finalize();
 	}
 }
 
-hash_t * cwaf_parse_query_string(void)
-{
-	hash_t *params;
-	object_t *param;
-	char *query_string, *start, *end;
-	string_t *name, *value;
-	char c;
-	int done = 0;
-
-	params = hash();
-	query_string = getenv("QUERY_STRING");
-	start = query_string;
-	while (!done) {
-		name = NULL;
-		value = NULL;
-		end = strpbrk(start, "=&;");
-		if (end != NULL) {
-			c = *end;
-			*end = '\0';
-			name = string(start);
-			*end = c;
-
-			start = end + 1;
-
-			if (c == '=') {
-				end = strpbrk(start, "&;");
-				if (end != NULL) {
-					c = *end;
-					*end = '\0';
-					value = string(start);
-					*end = c;
-					start = end + 1;
-				} else {
-					value = string(start);
-					done = 1;
-				}
-			}
-		} else {
-			name = string(start);
-			done = 1;
-		}
-
-		param = hash_get(params, string_to_c_str(name));
-		if (object_is_array(param)) {
-			array_push(param, value);
-		} else if (object_is_string(param)) {
-			string_t *copy = string(string_to_c_str(param));
-			array_t *a = array(copy, value);
-			hash_set(params, string_to_c_str(name), a);
-		} else {
-			hash_set(params, string_to_c_str(name), value);
-		}
-	}
-
-	return params;
-}

@@ -45,6 +45,6 @@ hash_t * cwaf_env_get(void)
 
 void cwaf_env_finalize(void)
 {
-	hash_free(env);
+	object_free(env);
 	env = NULL;
 }

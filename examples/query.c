@@ -2,15 +2,16 @@
 #include <libobject/json.h>
 #include "cwaf_router.h"
 #include "cwaf_env.h"
+#include "cwaf_params.h"
 #include "cwaf.h"
 
 array_t * print_query()
 {
 	array_t *response;
 	string_t *body;
-	hash_t *params;
+	const hash_t *params;
 
-	params = cwaf_parse_query_string();
+	params = cwaf_params_get_all();
 	body = string(object_to_json(params, OBJECT_TO_JSON_VERY_PRETTY));
 
 	response = array(
