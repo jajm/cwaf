@@ -32,6 +32,19 @@ static array_t * response_error_404(const char *message)
 	return response_error("404 Not Found", message);
 }
 
+int cwaf_puts(const char *s)
+{
+	if (s == NULL)
+		return -1;
+
+	return fputs(s, stdout);
+}
+
+int cwaf_putc(char c)
+{
+	return fputc(c, stdout);
+}
+
 void response_render(array_t *response)
 {
 	string_t *status = array_get(response, 0);
@@ -40,18 +53,23 @@ void response_render(array_t *response)
 	char *server_protocol;
 
 	server_protocol = getenv("SERVER_PROTOCOL");
-	printf("%s %s\n", server_protocol, string_to_c_str(status));
+	cwaf_puts(server_protocol);
+	cwaf_putc(' ');
+	cwaf_puts(string_to_c_str(status));
 	unsigned int size = array_size(header);
 	for (unsigned int i = 1; i < size; i += 2) {
 		string_t *key = array_get(header, i-1);
 		string_t *value = array_get(header, i);
-		printf("%s: %s\n", string_to_c_str(key), string_to_c_str(value));
+		cwaf_puts(string_to_c_str(key));
+		cwaf_puts(": ");
+		cwaf_puts(string_to_c_str(value));
+		cwaf_putc('\n');
 	}
-	printf("\n");
+	cwaf_putc('\n');
 	array_foreach(body, s) {
-		printf(string_to_c_str(s));
+		cwaf_puts(string_to_c_str(s));
 	}
-	printf("\n");
+	cwaf_putc('\n');
 }
 
 array_t * args_build_from_matches(char *path_info, size_t nmatch, regmatch_t *pmatch)
