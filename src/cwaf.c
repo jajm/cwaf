@@ -40,12 +40,6 @@ void response_render(array_t *response)
 	char *server_protocol;
 
 	server_protocol = getenv("SERVER_PROTOCOL");
-	if (server_protocol == NULL) {
-		response = response_error_500("SERVER_PROTOCOL is not defined");
-		response_render(response);
-		return;
-	}
-
 	printf("%s %s\n", server_protocol, string_to_c_str(status));
 	unsigned int size = array_size(header);
 	for (unsigned int i = 1; i < size; i += 2) {
@@ -82,6 +76,7 @@ void cwaf_init(array_t *router)
 		size_t nmatch = 9;
 		regmatch_t pmatch[10];
 		char *path_info;
+		char *server_protocol;
 		array_t *response;
 		iterator_t *it;
 		char buffer[80];
@@ -92,6 +87,13 @@ void cwaf_init(array_t *router)
 			response = response_error_500("PATH_INFO is not defined");
 			response_render(response);
 			continue;
+		}
+
+		server_protocol = getenv("SERVER_PROTOCOL");
+		if (server_protocol == NULL) {
+			response = response_error_500("SERVER_PROTOCOL is not defined");
+			response_render(response);
+			return;
 		}
 
 		it = array_iterator_new(router);
