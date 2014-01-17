@@ -29,4 +29,5 @@ install:
 
 clean:
 	$(MAKE) -C src clean
+	$(MAKE) -C examples clean
 	$(MAKE) -C t clean
